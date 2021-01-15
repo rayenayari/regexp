@@ -123,11 +123,6 @@ Definition langI L G : language :=
 Definition langS L G : language :=
   fun w => (exists w1 w2, (L w1) /\ (G w2) /\ (w = w1 ++ w2)).
 
-(*Inductive langS L G : language :=
-| Snil w :  (L nil) -> (G w) -> (langS L G w)
-| Snilb w: (L w) -> (G nil) -> (langS L G w)
-| Srec w1 w2: (L w1) -> (G w2) -> (langS L G (w1++w2)).*)
-
 Inductive langK L: language:=
 | Knil : langK L nil
 | KL w: (L w) -> langK L w
@@ -146,7 +141,6 @@ Infix "=L" := eqL (at level 90).
 
 Lemma concat0L L : langS lang0 L =L lang0.
 Proof.
-
 move => w.
 induction w; split; try done; simpl.
 unfold langS.
@@ -234,19 +228,6 @@ apply lw.
 split; try done.
 Qed.
 
-Lemma nil_nil w1 w2: nil=w1++w2-> w1 = nil /\ w2 = nil.
-Proof.
-move=>h.
-induction w2.
-split.
-rewrite  (w_nil w1) in h .
-symmetry.
-apply h.
-done.
-rewrite h in IHw2.
-Admitted.
-
-
 Lemma concatA L G H : langS (langS L G) H =L langS L (langS G H).
 Proof. 
 move=>w.
@@ -296,10 +277,6 @@ rewrite H2.
 rewrite H4.
 reflexivity.
 Qed.
-
-
-
-
 
 Lemma unionC L G : langU L G =L langU G L.
 Proof. 
@@ -412,6 +389,7 @@ destruct p. destruct H. destruct H. destruct H0.
 rewrite H in H1. rewrite H0 in H1.
 apply H1.
 Qed.
+
 Lemma regularW w : regular (langW w).
 Proof.
 induction w.
@@ -423,14 +401,71 @@ apply IHw.
 apply (regW_aux a w).
 Qed.
 
+Lemma regularM_aux L G: L =L G -> (langM L) =L (langM G).
+Proof.
+unfold eqL.
+split; apply H.
+Qed.
+
+Lemma revx x: (rev (x::nil)) = (x::nil).
+Proof.
+done.
+Qed.
+
 (* -------------------------------------------------------------------- *)
 (* Q5. prove that `langM L` is regular, given that L is regular.        *)
 Lemma regularM L : regular L -> regular (langM L).
 Proof.
+move => reg.
+induction reg.
++ apply regularM_aux in H.
+apply REq with (langM L).
+apply IHreg. apply H.
++apply REmpty.
++apply REq with (lang1).
+apply REnil.
+split.
+unfold langM, lang1. move => ass.
+have: rev (rev w) = nil by rewrite ass.
 move => p.
-case p.
-move=>G1 G2.
- 
+rewrite rev_involutive in p.
+apply p.
+unfold langM, lang1.
+move => ass.
+have: (rev w) = (rev nil) by rewrite ass.
+move => p.
+apply p.
++apply REq with (langA x).
+apply RE1.
+unfold langM, langA.
+split.
+move => ass.
+have: (rev (rev w)) = (x::nil) by rewrite ass.
+move => p.
+rewrite rev_involutive in p.
+apply p.
+move=> ass.
+have: (rev w) = (rev (x::nil)) by rewrite ass.
+move => p.
+apply p.
++apply REq with (langU (langM L) (langM G)).
+apply REU.
+apply IHreg1. apply IHreg2.
+unfold langM, langU.
+done.
++apply REq with (langS (langM L) (langM G)).
+apply RES.
+apply IHreg1. apply IHreg2.
+unfold langM, langS.
+split.
+move => p. destruct p. destruct H.
+exists (rev x). exists (rev x0). rewrite rev_involutive. rewrite rev_involutive.
+destruct H. destruct H0.
+split. assumption. split. assumption.
+(*apply H1.
+rewrite (rev_app_distr x x0) in H.
+split.
+move => p.*)
 Admitted.
 
 (* ==================================================================== *)
@@ -506,6 +541,7 @@ Fixpoint interp (r : regexp) {struct r} : language :=
   | RE_Conc r1 r2  => (langS (interp r1) (interp r2))
   | RE_Kleene r => (langK (interp r))
   end.
+
 (* Q8. show that the interpretation of a regular expression is a        *)
 (*     regular language:                                                *)
 Lemma regular_regexp r : regular (interp r).
@@ -614,7 +650,8 @@ Qed.
 (* Q10. write a binary predicate eqR : regexp -> regexp -> Prop s.t.    *)
 (*      eqR r1 r2 iff r1 and r2 are equivalent regexp.                  *)
 
-Definition eqR (r1 r2 : regexp) : Prop := todo.
+Definition eqR (r1 r2 : regexp) : Prop := 
+  forall r1 r2, (interp r1) =L (interp r2).
 
 Infix "~" := eqR (at level 90).
 
