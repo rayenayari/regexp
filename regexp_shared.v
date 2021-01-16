@@ -418,7 +418,7 @@ Lemma regularM L : regular L -> regular (langM L).
 Proof.
 move => reg.
 induction reg.
-+ apply regularM_aux in H.
++apply regularM_aux in H.
 apply REq with (langM L).
 apply IHreg. apply H.
 +apply REmpty.
@@ -453,19 +453,35 @@ apply REU.
 apply IHreg1. apply IHreg2.
 unfold langM, langU.
 done.
-+apply REq with (langS (langM L) (langM G)).
++apply REq with (langS (langM G) (langM L)).
 apply RES.
-apply IHreg1. apply IHreg2.
+apply IHreg2. apply IHreg1.
 unfold langM, langS.
 split.
 move => p. destruct p. destruct H.
-exists (rev x). exists (rev x0). rewrite rev_involutive. rewrite rev_involutive.
+exists (rev x0). exists (rev x). rewrite rev_involutive. rewrite rev_involutive.
 destruct H. destruct H0.
 split. assumption. split. assumption.
-(*apply H1.
-rewrite (rev_app_distr x x0) in H.
+have: (rev (rev w)) = rev(x ++ x0) by rewrite H1.
+move => p.
+rewrite rev_involutive in p.
+Search (rev).
+rewrite (rev_app_distr x x0) in p.
+apply p.
+move => p. destruct p. destruct H. destruct H. destruct H0.
+exists (rev x0). exists (rev x).
+split. assumption. split. assumption.
+have: (rev w) = (rev (x ++ x0)) by rewrite H1.
+move => p.
+rewrite (rev_app_distr x x0) in p.
+apply p.
++apply REq with (langK (langM L)). 
+apply REK.
+apply IHreg.
 split.
-move => p.*)
+induction w.
+move => p.
+apply Knil.
 Admitted.
 
 (* ==================================================================== *)
@@ -650,13 +666,52 @@ Qed.
 (* Q10. write a binary predicate eqR : regexp -> regexp -> Prop s.t.    *)
 (*      eqR r1 r2 iff r1 and r2 are equivalent regexp.                  *)
 
-Definition eqR (r1 r2 : regexp) : Prop := 
-  forall r1 r2, (interp r1) =L (interp r2).
+Definition eqR (r1 r2 : regexp) : Prop := (interp r1) =L (interp r2).
 
 Infix "~" := eqR (at level 90).
 
 (* Q11. state and prove the following regexp equivalence:               *)
 (*           (a|b)* ~ ( a*b* )*                                         *)
+
+Lemma small_eq a b: 
+(RE_Kleene (RE_Disj (RE_Atom a) (RE_Atom b))) 
+~ (RE_Kleene (RE_Conc (RE_Kleene (RE_Atom a)) (RE_Kleene (RE_Atom b)))).
+Proof.
+split.
++move => int.
+  induction int.
+  apply Knil.
+  apply KL.
+  unfold langS.
+  destruct H.
+  exists w. exists nil.
+  split. apply KL. done.
+  split. apply Knil.
+  apply (app_nil_end w).
+  exists nil. exists w.
+  split. apply Knil.
+  split. apply KL. done.
+  apply (app_nil_l w).
+  simpl.
+  apply Krec.
+  destruct H.
+  unfold langS, langW.
+  exists w1. exists nil.
+  split. apply KL. apply H.
+  split. apply Knil. apply app_nil_end.
+  unfold langS, langW.
+  exists nil. exists w1.
+  split. apply Knil.
+  split. apply KL. apply H.
+  done.
+  apply IHint.
++move => int.
+  induction int.
+  apply Knil.
+  apply KL.
+  unfold langU, langW.
+  destruct H. destruct H. destruct H. destruct H0.
+Admitted.
 
 (* ==================================================================== *)
 (*                          REGEXP MATCHING                             *)
@@ -686,7 +741,11 @@ Infix "~" := eqR (at level 90).
 (*                                                                      *)
 (*      ∀ r, contains0 r ⇔ ε ∈ [e]                                      *)
 
-Definition contains0 (r : regexp) : bool := todo.
+Fixpoint contains0 (r : regexp) : bool := 
+  match r with
+  | 
+  |
+  end.
 
 (* Q13. prove that your definition of `contains0` is correct:           *)
 
