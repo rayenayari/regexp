@@ -743,14 +743,27 @@ Admitted.
 
 Fixpoint contains0 (r : regexp) : bool := 
   match r with
-  | 
-  |
+  | RE_Empty      => false
+  | RE_Void       => true
+  | RE_Atom a     => false
+  | RE_Disj r1 r2 => (contains0 r1) || (contains0 r2)
+  | RE_Conc r1 r2 => (contains0 r1) && (contains0 r2)
+  | RE_Kleene r   => true
   end.
 
 (* Q13. prove that your definition of `contains0` is correct:           *)
 
 Lemma contains0_ok r : contains0 r <-> interp r nil.
-Proof. todo. Qed.
+Proof.
+split.
+move => cont.
+induction r.
+discriminate.
+done.
+discriminate.
+
+
+Qed.
 
 (* We give below the definition of the Brzozowski's derivative:         *)
 (*                                                                      *)
