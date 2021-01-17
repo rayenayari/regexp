@@ -758,13 +758,72 @@ Lemma contains0_ok r : contains0 r <-> interp r nil.
 Proof.
 split.
 move => cont.
-induction r.
-discriminate.
-done.
-discriminate.
-
-
-Admitted.
++induction r.
+++discriminate.
+++done.
+++discriminate.
+++simpl.
+  unfold langU.
+  simpl in cont.
+  move/orP: cont=>[cont|cont].
+  left.
+  apply IHr1.
+  apply cont.
+  right.
+  apply IHr2.
+  apply cont.
+++simpl in cont.
+  move/andP: cont=>cont.
+  simpl.
+  unfold langS.
+  exists  nil.
+  exists  nil.
+  split.
+  apply IHr1.
+  apply cont.
+  split.
+  apply IHr2.
+  apply cont.
+  trivial.
+++apply Knil.
++induction r.
+++simpl;done.
+++simpl;done.
+++simpl;done.
+++simpl.
+  move=>lang.
+  unfold langU in lang.
+  destruct lang.
+  rewrite IHr1.
+  apply H.
+  done.
+  rewrite IHr2.
+  apply H.
+  apply Bool.orb_true_r.
+++simpl.
+  move=>lang.
+  unfold langS in lang.
+  destruct lang.
+  destruct H.
+  destruct H.
+  destruct H0.
+  Search(_++_=nil).
+  symmetry in H1.
+  apply app_eq_nil in H1.
+  destruct H1.
+  rewrite H1  in H.
+  rewrite H2 in H0.
+  rewrite IHr1.
+  apply H.
+  Search(true && _).
+  rewrite Bool.andb_true_l.
+  rewrite IHr2.
+  apply H0.
+  done.
+++simpl.
+  done.
+Qed.
+  
 
 (* We give below the definition of the Brzozowski's derivative:         *)
 (*                                                                      *)
