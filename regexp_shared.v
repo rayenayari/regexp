@@ -764,7 +764,7 @@ done.
 discriminate.
 
 
-Qed.
+Admitted.
 
 (* We give below the definition of the Brzozowski's derivative:         *)
 (*                                                                      *)
@@ -790,12 +790,24 @@ Parameter Aeq : A -> A -> bool.
 (* Here, `Aeq x y` has to be read as `Aeq x y = true`                   *)
 Axiom Aeq_dec : forall (x y : A), Aeq x y <-> x = y.
 
-Definition Brzozowski (x : A) (r : regexp) : regexp := todo.
+Fixpoint Brzozowski (x : A) (r : regexp) : regexp := 
+match r with
+  | RE_Empty      => RE_Empty
+  | RE_Void       => RE_Empty
+  | RE_Atom y      => if (Aeq x y) then RE_Void else RE_Empty
+  | RE_Disj r1 r2 => (RE_Disj (Brzozowski x r1) (Brzozowski x r2))
+  | RE_Conc r1 r2 => (RE_Conc (Brzozowski x r1) (Brzozowski x r2))
+  | RE_Kleene r   => (RE_Conc (Brzozowski x r) (RE_Kleene r))
+  end.
 
 (* Q15. write a function `rmatch` s.t. `rmatch r w` checks wether a     *)
 (*      word `w` matches a given regular expression `r`.                *)
 
-Definition rmatch (r : regexp) (w : word) : bool := todo.
+Fixpoint rmatch (r : regexp) (w : word) : bool := 
+match w with
+  | nil   => (contains0 r)
+  | x::w0 => (rmatch (Brzozowski x r) w0)
+  end.
 
 (* Q16. show that the `Brzozowski` function is correct.                 *)
 
