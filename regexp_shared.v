@@ -673,43 +673,44 @@ Infix "~" := eqR (at level 90).
 (* Q11. state and prove the following regexp equivalence:               *)
 (*           (a|b)* ~ ( a*b* )*                                         *)
 
-Lemma small_eq a b: 
-(RE_Kleene (RE_Disj (RE_Atom a) (RE_Atom b))) 
-~ (RE_Kleene (RE_Conc (RE_Kleene (RE_Atom a)) (RE_Kleene (RE_Atom b)))).
+Lemma small_eq r1 r2: 
+(RE_Kleene (RE_Disj (r1) (r2))) 
+~ (RE_Kleene (RE_Conc (RE_Kleene (r1)) (RE_Kleene (r2)))).
 Proof.
 split.
 +move => int.
   induction int.
   apply Knil.
   apply KL.
-  unfold langS.
   destruct H.
+  unfold langS.
   exists w. exists nil.
-  split. apply KL. done.
+  split. apply KL. apply H.
   split. apply Knil.
-  apply (app_nil_end w).
+  apply app_nil_end.
+  unfold langS.
   exists nil. exists w.
   split. apply Knil.
-  split. apply KL. done.
-  apply (app_nil_l w).
-  simpl.
+  split. apply KL. apply H.
+  apply app_nil_l.
   apply Krec.
   destruct H.
-  unfold langS, langW.
+  unfold langS.
   exists w1. exists nil.
   split. apply KL. apply H.
-  split. apply Knil. apply app_nil_end.
-  unfold langS, langW.
+  split. apply Knil.
+  apply app_nil_end.
+  unfold langS.
   exists nil. exists w1.
   split. apply Knil.
   split. apply KL. apply H.
-  done.
+  apply app_nil_l.
   apply IHint.
 +move => int.
   induction int.
   apply Knil.
   apply KL.
-  unfold langU, langW.
+  unfold langU.
   destruct H. destruct H. destruct H. destruct H0.
 Admitted.
 
