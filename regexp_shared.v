@@ -872,7 +872,23 @@ match w with
 
 Lemma Brzozowski_correct (x : A) (w : word) (r : regexp) :
   interp (Brzozowski x r) w -> interp r (x :: w).
-Proof. todo. Qed.
+Proof.
+move=>brzo.
+induction w.
++induction r.
+++done.
+++done.
+++simpl in brzo .
+  case: (Aeq x a) in brzo.
+  simpl.
+  simpl in brzo.
+  unfold lang1 in brzo.
+  unfold langW.
+  .
+  
+
+  
+Admitted.
 
 (* Q17. show that `rmatch` is correct.                                  *)
 
