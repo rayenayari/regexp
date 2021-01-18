@@ -125,7 +125,7 @@ Definition langS L G : language :=
 
 Inductive langK L: language:=
 | Knil : langK L nil
-| KL w: (L w) -> langK L w
+(*| KL w: (L w) -> langK L w*)
 | Krec w1 w2: (L w1) -> (langK L w2) -> langK L (w1++w2).
 
 Definition langM L : language := 
@@ -310,12 +310,20 @@ move => w1 w2 p1 p2.
 induction p1.
 rewrite (app_nil_l w2).
 apply p2.
-apply Krec.
-apply H.
-apply p2.
 rewrite (app_assoc_reverse w1 w0 w2).
 apply Krec.
-apply H. apply IHp1.
+apply H.
+assumption.
+Qed.
+
+Lemma KL L w: (L w) -> (langK L w).
+Proof.
+move => p.
+Search (_ ++ nil).
+rewrite (app_nil_end w).
+apply Krec.
+assumption.
+apply Knil.
 Qed.
 
 Lemma langKK L : langK (langK L) =L langK L.
@@ -324,17 +332,9 @@ split.
 move =>p.
 induction p.
 apply Knil.
-done.
-apply langKKaux.
-apply H. apply IHp.
+apply langKKaux; assumption.
 move => p.
-induction p.
-apply Knil.
-apply KL. apply KL. apply H.
-apply Krec.
-apply KL.
-apply H.
-apply IHp.
+apply KL. assumption.
 Qed.
 
 
@@ -412,6 +412,15 @@ Proof.
 done.
 Qed.
 
+Lemma LK12: forall w1 w2 L, (langK L w1) -> (langK L w2) -> (langK L (w1++w2)).
+Proof.
+move => w1 w2 L LK1 LK2.
+induction LK1.
+assumption.
+rewrite app_assoc_reverse.
+apply Krec; assumption.
+Qed.
+
 (* -------------------------------------------------------------------- *)
 (* Q5. prove that `langM L` is regular, given that L is regular.        *)
 Lemma regularM L : regular L -> regular (langM L).
@@ -479,10 +488,33 @@ apply p.
 apply REK.
 apply IHreg.
 split.
-induction w.
+unfold langM.
 move => p.
+rewrite -[w]rev_involutive.
+move: (rev w) p.
+move => {w}.
+move => w p.
+induction p.
 apply Knil.
-Admitted.
+rewrite rev_app_distr.
+apply LK12.
+assumption.
+apply KL.
+rewrite rev_involutive. assumption.
+unfold langM.
+move => p.
+rewrite -[w]rev_involutive.
+move: w p.
+move => w1 p.
+induction p.
+apply Knil.
+rewrite rev_involutive.
+rewrite rev_app_distr.
+apply LK12.
+rewrite rev_involutive in IHp.
+assumption.
+apply KL. assumption.
+Qed.
 
 (* ==================================================================== *)
 (*                        REGULAR EXPRESSIONS                           *)
@@ -640,9 +672,6 @@ induction regL.
    unfold eqL in H.
    induction H2.
    apply Knil.
-   apply KL .
-   apply H.
-   apply H0.
    apply Krec.
    apply H.
    apply H0.
@@ -651,9 +680,6 @@ induction regL.
    move=>H1.
    induction H1.
    apply Knil.
-   apply KL.
-   apply H.
-   apply H0.
    apply Krec.
    apply H.
    apply H0.
@@ -681,38 +707,38 @@ split.
 +move => int.
   induction int.
   apply Knil.
-  apply KL.
-  destruct H.
-  unfold langS.
-  exists w. exists nil.
-  split. apply KL. apply H.
-  split. apply Knil.
-  apply app_nil_end.
-  unfold langS.
-  exists nil. exists w.
-  split. apply Knil.
-  split. apply KL. apply H.
-  apply app_nil_l.
+  simpl. simpl in H. simpl in int. simpl in IHint.
   apply Krec.
   destruct H.
   unfold langS.
   exists w1. exists nil.
-  split. apply KL. apply H.
+  split. apply KL. assumption. 
   split. apply Knil.
-  apply app_nil_end.
+  rewrite app_nil_r. done.
   unfold langS.
   exists nil. exists w1.
   split. apply Knil.
-  split. apply KL. apply H.
-  apply app_nil_l.
-  apply IHint.
+  split. apply KL. assumption.
+  done.
+  assumption.
 +move => int.
   induction int.
   apply Knil.
-  apply KL.
-  unfold langU.
-  destruct H. destruct H. destruct H. destruct H0.
-Admitted.
+  simpl in H, int, IHint. simpl.
+  apply LK12; last done.
+  case: H => [w11][w12][H1][H2] ->.
+  apply LK12.
+  induction H1.
+  apply Knil.
+  apply Krec.
+  left. assumption.
+  assumption.
+  induction H2.
+  apply Knil.
+  apply Krec.
+  right. assumption.
+  assumption.
+Qed.
 
 (* ==================================================================== *)
 (*                          REGEXP MATCHING                             *)
@@ -807,7 +833,6 @@ move => cont.
   destruct H.
   destruct H.
   destruct H0.
-  Search(_++_=nil).
   symmetry in H1.
   apply app_eq_nil in H1.
   destruct H1.
@@ -815,7 +840,6 @@ move => cont.
   rewrite H2 in H0.
   rewrite IHr1.
   apply H.
-  Search(true && _).
   rewrite Bool.andb_true_l.
   rewrite IHr2.
   apply H0.
@@ -823,7 +847,6 @@ move => cont.
 ++simpl.
   done.
 Qed.
-  
 
 (* We give below the definition of the Brzozowski's derivative:         *)
 (*                                                                      *)
