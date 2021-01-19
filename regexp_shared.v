@@ -915,77 +915,159 @@ match w with
 (* Q16. show that the `Brzozowski` function is correct.                 *)
 
 Lemma Brzozowski_correct (x : A) (w : word) (r : regexp) :
-  interp (Brzozowski x r) w -> interp r (x :: w).
+  forall w0, interp (Brzozowski x r) w0 -> interp r (x :: w0).
 Proof.
-move=>brzo.
-induction w.
-+induction r.
-++done.
-++done.
-++simpl in brzo .
-  case: (Aeq x a) in brzo.
-  simpl.
-  simpl in brzo.
-  unfold lang1 in brzo.
-  unfold langW.
-  
-  
++induction r;try done.
+(* We focused on goal 3 first because it is the most difficult *)
+Focus 3.
+  move=>w0 brzo.
+   simpl.
+   unfold langS.
+   simpl in brzo.
+   destruct brzo.
+   destruct H.
+   destruct H.
+   exists (x::x0).
+   exists x1.
+   destruct H. destruct H0.
+   split. auto.
+   split.
+   auto.
+   rewrite H1.
+   apply app_comm_cons.
+   destruct H.
+   destruct H.
+   destruct H.
+   case e:(contains0 r1).
+   rewrite e in H.
+   exists nil.
+   exists (x::w0).
+   split.
+   apply contains0_ok.
+   done.
+   split.
+   destruct H0.
+   apply IHr2.
+   simpl in H.
+   unfold lang1 in H.
+   rewrite H in H1.
+   rewrite H1.
+   simpl.
+   done.
+   done.
+   rewrite e in H.
+   simpl in H.
+   unfold lang0 in H.
+   done.
 
-  
-Admitted.
+++move=>w0 brzo. simpl in brzo.
+  case e: (Aeq x a).
+  rewrite e in brzo.
+  simpl in brzo.
+  simpl.
+  unfold lang1 in brzo.
+  rewrite brzo.
+  apply Aeq_dec in e.
+  rewrite e.
+  unfold langW.
+  done.
+  rewrite e in brzo.
+  done.
+
+++move=>w0 brzo. simpl in brzo.
+  simpl.
+  unfold langU.
+  unfold langU in brzo.
+  destruct brzo.
+  left.
+  apply IHr1.
+  done.
+  right.
+  apply IHr2.
+  done.
+
+++move=>w0 brzo. simpl in brzo.
+  simpl.
+  unfold langS in brzo.
+  destruct brzo.
+  destruct H.
+  destruct H.
+  destruct H0.
+  rewrite H1.
+  rewrite (app_comm_cons).
+  apply Krec.
+  apply IHr.
+  apply H.
+  done.
+
+Qed.
 
 (* Q17. show that `rmatch` is correct.                                  *)
 
 Lemma rmatch_correct (r : regexp) (w : word):
-  rmatch r w -> interp r w.
+   rmatch r w -> interp r w.
 Proof.
-move=>H.
+move:r. (* To make a forall *)
 induction w.
-induction r.
-+done.
-+done.
-+done.
 +simpl.
-  unfold langU.
-  simpl in H.
-  move/orP: H => [H | H].
-  left.
-  apply IHr1.
-  assumption. (* contains0 r is equivalent to rmatch r nil*)
-  right.
-  apply IHr2.
-  assumption.
+ move=>r.
+ apply (contains0_ok).
+
 +simpl.
-  unfold langS.
-  simpl in H.
-  move/andP: H=>H .
-  exists nil .
-  exists nil.
-  split.
-  ++apply IHr1.
-    apply H.
-  ++split.
-    apply IHr2.
-    apply H.
-    trivial.
-+simpl.
-  apply Knil.
-+induction r.
-++simpl.
-  simpl in H.
-  unfold lang0.
-  apply IHw.
-  apply H.
-++simpl.
-  simpl in H.
-  unfold lang1.
-  apply H.
-  
-  
+ move=>r.
+ move=>brzo.
+ apply (Brzozowski_correct).
+ auto.
+ apply IHw.
+ done.
+
 Qed.
 
 (* Q18. (HARD - OPTIONAL) show that `rmatch` is complete.               *)
 
 Lemma rmatch_complete (r : regexp) (w : word):
   interp r w -> rmatch r w.
-Proof. todo. Qed.
+Proof.
+move => p.
+induction w.
++induction r; try done.
+++simpl.
+  apply/orP.
+  simpl in p.
+  unfold langU in p.
+  move: p=>[p|p].
+  left.
+  simpl in IHr1.
+  apply IHr1.
+  assumption.
+  right.
+  apply IHr2.
+  assumption.
+++simpl.
+  apply/andP.
+  simpl in p.
+  unfold langS in p.
+  move: p => [w1][w2][int1][int2][eq].
+  simpl in IHr1, IHr2.
+  split.
+  +++apply IHr1.
+     symmetry in eq.
+     apply app_eq_nil in eq. (* nil=w1++w2 is equivalent to w1=nil /\ w2=nil*)
+     move: eq=>[eq1][eq2].
+     rewrite eq1 in int1.
+     assumption.
+  +++apply IHr2.
+  symmetry in eq.
+  apply app_eq_nil in eq. (* nil=w1++w2 is equivalent to w1=nil /\ w2=nil*)
+  move: eq=>[eq1][eq2].
+  rewrite eq2 in int2.
+  assumption.
++induction w.
+ simpl in p.
+ simpl.
+ apply contains0_ok.
+ induction r;try done.
+ ++simpl.
+   case e: (Aeq a a0).
+   done.
+Admitted.
