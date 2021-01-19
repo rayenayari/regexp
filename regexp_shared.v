@@ -265,6 +265,7 @@ split.
        rewrite H4.
        symmetry.
        apply app_assoc.
+(*Second implication*)
 +move=>h.
  destruct h, H0, H0, H1.
  case:H1.
@@ -429,12 +430,6 @@ unfold eqL.
 split; apply H.
 Qed.
 
-Lemma revx x: (rev (x::nil)) = (x::nil).
-(* Obvious but not present in coq *)
-Proof.
-done.
-Qed.
-
 (* -------------------------------------------------------------------- *)
 (* Q5. prove that `langM L` is regular, given that L is regular.        *)
 Lemma regularM L : regular L -> regular (langM L).
@@ -443,10 +438,13 @@ Lemma regularM L : regular L -> regular (langM L).
 Proof.
 move => reg.
 induction reg.
+
 +apply regularM_aux in H.
 apply REq with (langM L).
 apply IHreg. apply H.
+
 +apply REmpty.
+
 +apply REq with (lang1).
 apply REnil.
 split.
@@ -460,6 +458,7 @@ move => ass.
 have: (rev w) = (rev nil) by rewrite ass.
 move => p.
 apply p.
+
 +apply REq with (langA x).
 apply RE1.
 unfold langM, langA.
@@ -473,11 +472,13 @@ move=> ass.
 have: (rev w) = (rev (x::nil)) by rewrite ass.
 move => p.
 apply p.
+
 +apply REq with (langU (langM L) (langM G)).
 apply REU.
 apply IHreg1. apply IHreg2.
 unfold langM, langU.
 done.
+
 +apply REq with (langS (langM G) (langM L)).
 apply RES.
 apply IHreg2. apply IHreg1.
@@ -499,6 +500,7 @@ have: (rev w) = (rev (x ++ x0)) by rewrite H1.
 move => p.
 rewrite (rev_app_distr x x0) in p.
 apply p.
+
 +apply REq with (langK (langM L)). 
 apply REK.
 apply IHreg.
@@ -1022,52 +1024,3 @@ induction w.
  done.
 
 Qed.
-
-(* Q18. (HARD - OPTIONAL) show that `rmatch` is complete.               *)
-
-Lemma rmatch_complete (r : regexp) (w : word):
-  interp r w -> rmatch r w.
-Proof.
-move => p.
-induction w.
-+induction r; try done.
-++simpl.
-  apply/orP.
-  simpl in p.
-  unfold langU in p.
-  move: p=>[p|p].
-  left.
-  simpl in IHr1.
-  apply IHr1.
-  assumption.
-  right.
-  apply IHr2.
-  assumption.
-++simpl.
-  apply/andP.
-  simpl in p.
-  unfold langS in p.
-  move: p => [w1][w2][int1][int2][eq].
-  simpl in IHr1, IHr2.
-  split.
-  +++apply IHr1.
-     symmetry in eq.
-     apply app_eq_nil in eq. (* nil=w1++w2 is equivalent to w1=nil /\ w2=nil*)
-     move: eq=>[eq1][eq2].
-     rewrite eq1 in int1.
-     assumption.
-  +++apply IHr2.
-  symmetry in eq.
-  apply app_eq_nil in eq. (* nil=w1++w2 is equivalent to w1=nil /\ w2=nil*)
-  move: eq=>[eq1][eq2].
-  rewrite eq2 in int2.
-  assumption.
-+induction w.
- simpl in p.
- simpl.
- apply contains0_ok.
- induction r;try done.
- ++simpl.
-   case e: (Aeq a a0).
-   done.
-Admitted.
