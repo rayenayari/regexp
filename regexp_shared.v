@@ -319,7 +319,6 @@ Qed.
 Lemma KL L w: (L w) -> (langK L w).
 Proof.
 move => p.
-Search (_ ++ nil).
 rewrite (app_nil_end w).
 apply Krec.
 assumption.
@@ -412,15 +411,6 @@ Proof.
 done.
 Qed.
 
-Lemma LK12: forall w1 w2 L, (langK L w1) -> (langK L w2) -> (langK L (w1++w2)).
-Proof.
-move => w1 w2 L LK1 LK2.
-induction LK1.
-assumption.
-rewrite app_assoc_reverse.
-apply Krec; assumption.
-Qed.
-
 (* -------------------------------------------------------------------- *)
 (* Q5. prove that `langM L` is regular, given that L is regular.        *)
 Lemma regularM L : regular L -> regular (langM L).
@@ -474,7 +464,6 @@ split. assumption. split. assumption.
 have: (rev (rev w)) = rev(x ++ x0) by rewrite H1.
 move => p.
 rewrite rev_involutive in p.
-Search (rev).
 rewrite (rev_app_distr x x0) in p.
 apply p.
 move => p. destruct p. destruct H. destruct H. destruct H0.
@@ -497,7 +486,7 @@ move => w p.
 induction p.
 apply Knil.
 rewrite rev_app_distr.
-apply LK12.
+apply langKKaux.
 assumption.
 apply KL.
 rewrite rev_involutive. assumption.
@@ -510,7 +499,7 @@ induction p.
 apply Knil.
 rewrite rev_involutive.
 rewrite rev_app_distr.
-apply LK12.
+apply langKKaux.
 rewrite rev_involutive in IHp.
 assumption.
 apply KL. assumption.
@@ -725,9 +714,9 @@ split.
   induction int.
   apply Knil.
   simpl in H, int, IHint. simpl.
-  apply LK12; last done.
+  apply langKKaux; last done.
   case: H => [w11][w12][H1][H2] ->.
-  apply LK12.
+  apply langKKaux.
   induction H1.
   apply Knil.
   apply Krec.
@@ -878,7 +867,7 @@ match r with
   | RE_Void       => RE_Empty
   | RE_Atom y      => if (Aeq x y) then RE_Void else RE_Empty
   | RE_Disj r1 r2 => (RE_Disj (Brzozowski x r1) (Brzozowski x r2))
-  | RE_Conc r1 r2 => (RE_Conc (Brzozowski x r1) (Brzozowski x r2))
+  | RE_Conc r1 r2 => (RE_Disj (RE_Conc (Brzozowski x r1) r2) (RE_Conc (if (contains0 r1) then RE_Void else RE_Empty) (Brzozowski x r2)))
   | RE_Kleene r   => (RE_Conc (Brzozowski x r) (RE_Kleene r))
   end.
 
