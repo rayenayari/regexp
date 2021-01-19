@@ -140,6 +140,7 @@ Infix "=L" := eqL (at level 90).
 (* Q2. Prove the following equivalances:                                *)
 
 Lemma concat0L L : langS lang0 L =L lang0.
+(* Here we check for every word that it is true: induction *)
 Proof.
 move => w.
 induction w; split; try done; simpl.
@@ -160,6 +161,7 @@ apply H.
 Qed.
 
 Lemma concatL0 L : langS L lang0 =L lang0.
+(*We proceed using the same method as before *)
 Proof.
 unfold langS.
 unfold lang0.
@@ -229,6 +231,8 @@ split; try done.
 Qed.
 
 Lemma concatA L G H : langS (langS L G) H =L langS L (langS G H).
+(* Lang S is transitive *)
+(* We move a word and then check existentials *)
 Proof. 
 move=>w.
 split.
@@ -279,6 +283,7 @@ reflexivity.
 Qed.
 
 Lemma unionC L G : langU L G =L langU G L.
+(* The Union of two languages is a symmetric relation *)
 Proof. 
 unfold langU.
 split.
@@ -289,6 +294,7 @@ right. done. left. done.
 Qed.
 
 Lemma interC L G : langI L G =L langI G L.
+(* The Intersection of two languages is a symmetric relation *)
 Proof.
 unfold langI.
 split.
@@ -305,6 +311,7 @@ assumption.
 Qed.
 
 Lemma langKKaux L : forall w1 w2, (langK L w1) -> (langK L w2) -> (langK L (w1++w2)).
+(* The Kleene closure is transitive *)
 Proof.
 move => w1 w2 p1 p2.
 induction p1.
@@ -317,6 +324,7 @@ assumption.
 Qed.
 
 Lemma KL L w: (L w) -> (langK L w).
+(* L is in the Kleene closure of itself *)
 Proof.
 move => p.
 rewrite (app_nil_end w).
@@ -326,6 +334,7 @@ apply Knil.
 Qed.
 
 Lemma langKK L : langK (langK L) =L langK L.
+(* As it is an infinite union langk -n times- =lang k *)
 Proof.
 split.
 move =>p.
@@ -372,6 +381,7 @@ Inductive regular : language -> Prop :=
 (* -------------------------------------------------------------------- *)
 (* Q4. prove that `langW w` is regular.                                 *)
 Lemma regW_aux x w: (langW (x::w)) =L (langS (langA x) (langW w)).
+(* We use this Lemma  to make the next proof  clearer *)
 Proof.
 split.
 move => p.
@@ -401,12 +411,14 @@ apply (regW_aux a w).
 Qed.
 
 Lemma regularM_aux L G: L =L G -> (langM L) =L (langM G).
+(* The reverse maintains equivalence relation *)
 Proof.
 unfold eqL.
 split; apply H.
 Qed.
 
 Lemma revx x: (rev (x::nil)) = (x::nil).
+(* Obvious but not present in coq *)
 Proof.
 done.
 Qed.
@@ -414,6 +426,8 @@ Qed.
 (* -------------------------------------------------------------------- *)
 (* Q5. prove that `langM L` is regular, given that L is regular.        *)
 Lemma regularM L : regular L -> regular (langM L).
+(* The reverse of a regular language is regular *)
+(* We proceed by induction over the cases of regular *)
 Proof.
 move => reg.
 induction reg.
@@ -570,6 +584,7 @@ Implicit Types (r : regexp).
 (* Q7. implement the Coq counterpart of the above definition:           *)
 
 Fixpoint interp (r : regexp) {struct r} : language :=
+(* regular expressions are a compact way to represent regular languages  *)
   match r with
   | RE_Empty => lang0
   | RE_Void  => lang1
@@ -582,6 +597,7 @@ Fixpoint interp (r : regexp) {struct r} : language :=
 (* Q8. show that the interpretation of a regular expression is a        *)
 (*     regular language:                                                *)
 Lemma regular_regexp r : regular (interp r).
+(* We proceed by induction over the cases of regular expressions *)
 Proof.
 induction r; simpl.
 apply REmpty.
@@ -600,6 +616,8 @@ Qed.
 
 Lemma regexp_regular L : regular L -> exists r, L =L interp r.
 Proof.
+(* We proceed by induction on the cases of languages *)
+(* We just have to match the correct existentials *)
 move => regL.
 induction regL.
   +destruct IHregL.
@@ -691,6 +709,7 @@ Infix "~" := eqR (at level 90).
 Lemma small_eq r1 r2: 
 (RE_Kleene (RE_Disj (r1) (r2))) 
 ~ (RE_Kleene (RE_Conc (RE_Kleene (r1)) (RE_Kleene (r2)))).
+(* We proceed by induction over the cases *)
 Proof.
 split.
 +move => int.
@@ -770,6 +789,7 @@ Fixpoint contains0 (r : regexp) : bool :=
 (* Q13. prove that your definition of `contains0` is correct:           *)
 
 Lemma contains0_ok r : contains0 r <-> interp r nil.
+(* To show that the definition is correct we check it for each r *)
 Proof.
 split.
 move => cont.
@@ -896,7 +916,7 @@ induction w.
   simpl in brzo.
   unfold lang1 in brzo.
   unfold langW.
-  .
+  
   
 
   
@@ -906,7 +926,51 @@ Admitted.
 
 Lemma rmatch_correct (r : regexp) (w : word):
   rmatch r w -> interp r w.
-Proof. todo. Qed.
+Proof.
+move=>H.
+induction w.
+induction r.
++done.
++done.
++done.
++simpl.
+  unfold langU.
+  simpl in H.
+  move/orP: H => [H | H].
+  left.
+  apply IHr1.
+  assumption. (* contains0 r is equivalent to rmatch r nil*)
+  right.
+  apply IHr2.
+  assumption.
++simpl.
+  unfold langS.
+  simpl in H.
+  move/andP: H=>H .
+  exists nil .
+  exists nil.
+  split.
+  ++apply IHr1.
+    apply H.
+  ++split.
+    apply IHr2.
+    apply H.
+    trivial.
++simpl.
+  apply Knil.
++induction r.
+++simpl.
+  simpl in H.
+  unfold lang0.
+  apply IHw.
+  apply H.
+++simpl.
+  simpl in H.
+  unfold lang1.
+  apply H.
+  
+  
+Qed.
 
 (* Q18. (HARD - OPTIONAL) show that `rmatch` is complete.               *)
 
