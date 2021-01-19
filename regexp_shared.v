@@ -144,20 +144,23 @@ Lemma concat0L L : langS lang0 L =L lang0.
 Proof.
 move => w.
 induction w; split; try done; simpl.
-unfold langS.
-unfold lang0.
-move => H.
-destruct H.
-destruct H.
-destruct H.
-apply H.
-unfold lang0.
-unfold langS.
-move=>H.
-destruct H.
-destruct H.
-destruct H.
-apply H.
+
++unfold langS.
+ unfold lang0.
+ move => H.
+ destruct H.
+ destruct H.
+ destruct H.
+ apply H.
+
++unfold lang0.
+ unfold langS.
+ move=>H.
+ destruct H.
+ destruct H.
+ destruct H.
+ apply H.
+
 Qed.
 
 Lemma concatL0 L : langS L lang0 =L lang0.
@@ -167,13 +170,17 @@ unfold langS.
 unfold lang0.
 move=> w.
 split.
-move=>H1.
-destruct H1 .
-destruct H.
-destruct H.
-destruct H0.
-apply H0.
-done.
+
++move=>H1.
+ destruct H1 .
+ destruct H.
+ destruct H.
+ destruct H0.
+ apply H0.
+
+(*Obvious False -> Prop is always true *)
++done.
+
 Qed.
 
 Lemma concat1L L : langS lang1 L =L L.
@@ -182,52 +189,49 @@ unfold langS.
 unfold lang1.
 move=>w.
 split.
-move=>H.
-destruct H.
-destruct H.
-destruct H.
-destruct H0.
-rewrite H in H1.
-rewrite H1.
-simpl.
-apply H0.
-move=>Lw.
-exists nil.
-exists w.
-done.
-Qed.
+(* First implication *)
+ +move=>H.
+ destruct H.
+ destruct H.
+ destruct H.
+ destruct H0.
+ rewrite H in H1.
+ rewrite H1.
+ simpl.
+ apply H0.
+(* Second implication *)
++move=>Lw.
+ exists nil.
+ exists w.
+ done.
 
-Lemma w_nil w: w++nil=w.
-Proof.
-induction w.
-done.
-simpl.
-rewrite IHw.
-reflexivity.
 Qed.
 
 Lemma concatL1 L : langS L lang1 =L L.
 Proof.
+
 unfold langS.
 unfold lang1.
 move=>w.
 split.
-move=>h.
-destruct h.
-destruct H.
-destruct H.
-destruct H0.
-rewrite H0 in H1.
-rewrite H1.
-rewrite ( w_nil x).
-apply H.
-move=>lw.
-exists w.
-exists nil.
-rewrite (w_nil w).
-split.
-apply lw.
-split; try done.
+(* First implication *)
++move=>h.
+ destruct h.
+ destruct H.
+ destruct H.
+ destruct H0.
+ rewrite H0 in H1.
+ rewrite H1.
+ rewrite ( app_nil_r x).
+ apply H.
+(* Second implication *)
++move=>lw.
+ exists w.
+ exists nil.
+ rewrite (app_nil_r w).
+ split.
+ apply lw.
+ split; try done.
 Qed.
 
 Lemma concatA L G H : langS (langS L G) H =L langS L (langS G H).
@@ -236,50 +240,52 @@ Lemma concatA L G H : langS (langS L G) H =L langS L (langS G H).
 Proof. 
 move=>w.
 split.
-move=>h.
-destruct h, H0, H0.
-case:H0.
-move=> w1 h.
-destruct h.
-unfold langS.
-exists w1. exists (x1++x0).
-split.
-apply H0.
-split.
-exists x1.
-exists x0.
-split.
-apply H0.
-destruct H1, H0, H3.
-split.
-apply H1.
-done.
-destruct H1.
-rewrite H2.
-destruct H0, H3.
-rewrite H4.
-symmetry.
-apply app_assoc.
-move=>h.
-destruct h, H0, H0, H1.
-case:H1.
-move=>x1 Ih.
-unfold langS.
-destruct Ih.
-exists (x++x1). exists x2.
-split.
-exists x. exists x1.
-split;try assumption.
-split;try assumption.
-apply H1.
-reflexivity.
-split.
-apply H1.
-destruct H1, H3.
-rewrite app_assoc_reverse.
-rewrite H2.
-rewrite H4.
-reflexivity.
+(* First implication *)
++move=>h.
+ destruct h, H0, H0.
+ case:H0.
+ move=> w1 h.
+ destruct h.
+ unfold langS.
+ exists w1. exists (x1++x0).
+ split.
+  ++apply H0.
+  ++split.
+    exists x1.
+    exists x0.
+    split.
+    +++apply H0.
+    +++destruct H1, H0, H3.
+       split.
+       apply H1.
+       done. 
+    +++destruct H1.
+       rewrite H2.
+       destruct H0, H3.
+       rewrite H4.
+       symmetry.
+       apply app_assoc.
++move=>h.
+ destruct h, H0, H0, H1.
+ case:H1.
+ move=>x1 Ih.
+ unfold langS.
+ destruct Ih.
+ exists (x++x1). exists x2.
+ split.
+ ++exists x. exists x1.
+   split;try assumption.
+   split;try assumption.
+   apply H1.
+   reflexivity.
+ ++split.
+ +++apply H1.
+ +++destruct H1, H3.
+    rewrite app_assoc_reverse.
+    rewrite H2.
+    rewrite H4.
+    reflexivity.
+
 Qed.
 
 Lemma unionC L G : langU L G =L langU G L.
@@ -287,10 +293,11 @@ Lemma unionC L G : langU L G =L langU G L.
 Proof. 
 unfold langU.
 split.
-move => [a|b].
++move => [a|b].
+ right. done. left. done.
++move => [a|b].
 right. done. left. done.
-move => [a|b].
-right. done. left. done.
+
 Qed.
 
 Lemma interC L G : langI L G =L langI G L.
@@ -298,16 +305,17 @@ Lemma interC L G : langI L G =L langI G L.
 Proof.
 unfold langI.
 split.
-move => a.
-destruct a.
-split.
-assumption.
-assumption.
-move => a.
-destruct a.
-split.
-assumption.
-assumption.
++move => a.
+ destruct a.
+ split.
+ assumption.
+ assumption.
++move => a.
+ destruct a.
+ split.
+ assumption.
+ assumption.
+
 Qed.
 
 Lemma langKKaux L : forall w1 w2, (langK L w1) -> (langK L w2) -> (langK L (w1++w2)).
@@ -315,12 +323,13 @@ Lemma langKKaux L : forall w1 w2, (langK L w1) -> (langK L w2) -> (langK L (w1++
 Proof.
 move => w1 w2 p1 p2.
 induction p1.
-rewrite (app_nil_l w2).
-apply p2.
-rewrite (app_assoc_reverse w1 w0 w2).
-apply Krec.
-apply H.
-assumption.
++rewrite (app_nil_l w2).
+ apply p2.
++rewrite (app_assoc_reverse w1 w0 w2).
+ apply Krec.
+ apply H.
+ assumption.
+
 Qed.
 
 Lemma KL L w: (L w) -> (langK L w).
@@ -329,20 +338,22 @@ Proof.
 move => p.
 rewrite (app_nil_end w).
 apply Krec.
-assumption.
-apply Knil.
++assumption.
++apply Knil.
+
 Qed.
 
 Lemma langKK L : langK (langK L) =L langK L.
 (* As it is an infinite union langk -n times- =lang k *)
 Proof.
 split.
-move =>p.
-induction p.
-apply Knil.
-apply langKKaux; assumption.
-move => p.
-apply KL. assumption.
++move =>p.
+ induction p.
+ apply Knil.
+ apply langKKaux; assumption.
++move => p.
+ apply KL. assumption.
+
 Qed.
 
 
@@ -352,8 +363,8 @@ Qed.
 (* ==================================================================== *)
 (*                          REGULAR LANGUAGES                           *)
 
-(* We are now interested in a subclass of languages called "regular     *)
-(* languages": a language `L` is said to be regular iff one of the      *)
+(* We are now interested in a subclass of languages called regular     *)
+(* languages: a language `L` is said to be regular iff one of the      *)
 (* following holds:                                                     *)
 (*                                                                      *)
 (*  - L = ∅ or L = {ε} or L = {x} for some x ∈ A ;                      *)
@@ -384,19 +395,20 @@ Lemma regW_aux x w: (langW (x::w)) =L (langS (langA x) (langW w)).
 (* We use this Lemma  to make the next proof  clearer *)
 Proof.
 split.
-move => p.
-unfold langW in p.
-unfold langS.
-exists (x::nil).
-exists w; split; done.
-move => p.
-unfold langW in p.
-unfold langW.
-unfold langS in p.
-unfold langA in p.
-destruct p. destruct H. destruct H. destruct H0.
-rewrite H in H1. rewrite H0 in H1.
-apply H1.
++move => p.
+ unfold langW in p.
+ unfold langS.
+ exists (x::nil).
+ exists w; split; done.
++move => p.
+ unfold langW in p.
+ unfold langW.
+ unfold langS in p.
+ unfold langA in p.
+ destruct p. destruct H. destruct H. destruct H0.
+ rewrite H in H1. rewrite H0 in H1.
+ apply H1.
+
 Qed.
 
 Lemma regularW w : regular (langW w).
